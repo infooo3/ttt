@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Tris </title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<!------------------------------------------------------------------------------------>
+	<style type="text/css">
+		#tuttibottoni {
+			width: 100%;
+			aspect-ratio: 1/1;
+			display: flex;
+			flex-wrap: wrap;
+			font-size: xx-large;
+		}
+
+		.bottoni1,
+		.bottoni2,
+		.bottoni3 {
+			width: 100%;
+			display: flex;
+			justify-content: space-around;
+			flex-wrap: wrap;
+			align-items: center;
+		}
+
+		#tuttibottoni button {
+			width: 32%;
+			aspect-ratio: 1/1;
+			padding: 0;
+			margin: 0;
+			border: 0;
+			background-color: #ff00006e;
+		}
+
+		.commentialti h3,
+		h4 {
+			width: 100%;
+			display: flex;
+			justify-content: center;
+			margin: 0;
+			align-items: center;
+		}
+
+		.commentialti {
+			width: 100%;
+			height: 15vh;
+			display: flex;
+			flex-wrap: wrap;
+			max-height: 80px;
+		}
+
+		#findMatch {
+			border: solid;
+			width: 100%;
+			border-radius: 45px;
+			box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+			transition: all 0.3s ease 0s;
+			cursor: pointer;
+			outline: none;
+			display: flex;
+			justify-content: center;
+			height: 4vh;
+			align-items: center;
+		}
+
+		#findMatch:hover {
+			box-shadow: 0px 15px 20px rgba(46, 229, 157, 0.4);
+			color: #fff;
+			transform: translateY(-7px);
+		}
+
+		body {
+			background: radial-gradient(circle, rgb(0 0 0 / 63%) 71%, rgba(255, 0, 0, 1) 100%);
+			margin: 0;
+			max-width: 450px;
+
+		}
+
+		h3#info {
+			max-height: 80px;
+			box-shadow: 0px 8px 15px;
+			text-shadow: #050000 1px 1px;
+
+		}
+
+		.commentialti {
+			height: 16vw;
+		}
+
+		.Xeffects {
+			animation-duration: 2s;
+			animation-name: XeffectsAnimation;
+			color: indigo
+		}
+
+		@keyframes XeffectsAnimation {
+			0% {
+				opacity: 0;
+			}
+
+			100% {
+				opacity: 1;
+				transform: rotateY(360deg)
+			}
+		}
+	</style>
+
+
+
+	<!------------------------------------------------------------------------------------>
+</head>
+
+<body>
+	<div class="commentialti">
+		<h3 id="info">Qui potrai leggere i messaggi</h3>
+	</div>
+
+	<!--<audio >
+  <source src="applausi.mp3" id="applausi" type="audio/mpeg">
+</audio> -->
+
+	<div id="tuttibottoni">
+
+		<div class="bottoni1">
+			<button id="1" class="gameButton"></button>
+			<button id="2" class="gameButton"></button>
+			<button id="3" class="gameButton"></button>
+		</div>
+
+		<div class="bottoni2">
+			<button id="4" class="gameButton"></button>
+			<button id="5" class="gameButton"></button>
+			<button id="6" class="gameButton"></button>
+		</div>
+
+		<div class="bottoni3">
+			<button id="7" class="gameButton"></button>
+			<button id="8" class="gameButton"></button>
+			<button id="9" class="gameButton"></button>
+		</div>
+	</div>
+	<button id="findMatch">Trova una partita</button><br>
+	<form>
+		<textarea id="myMessage" placeholder="Qui puoi scrivere un messaggio corto; solo lettere e numeri">
+		</textarea>
+		<button type="submit" id="submitMessage">Invia o ricevi messaggio</button>
+	</form>
+	<script>
+		let nmatch
+		let id
+		let myCell
+		let userSawPositions = false
+		let iWon = false
+
+		findMatch.addEventListener("click", getall)
+		let gamebutt = document.querySelectorAll(".gameButton")
+		gamebutt.forEach(element => element.addEventListener("click", getPositions));
+		submitMessage.addEventListener("click", sendOrReceiveMsg)
+
+
+
+
+		function getall() {
+			for (i = 0; i < 9; i++) {
+				console.log("reset cell")
+				document.querySelectorAll(".gameButton")[i].innerText = ""
+			}
+			let data = []
+			fetch("http://localhost:3001/api/matchs")
+				.then(function (res) {
+					return res.json()
+				})
+				.then(function (res) {
+					if (res.id) {
+						id = res.id
+						nmatch = res.match
+						document.getElementById("info").innerText = ("Id:" + id + ", Match n°" + nmatch)
+					}
+				})
+		}
+
+
+
+
+
+
+		function sendOrReceiveMsg(e) {
+			e.preventDefault()
+			let msg = document.getElementById("myMessage").value
+			if (msg.length > 20) {
+				alert("Messaggio troppo lungo")
+			}
+			else {
+				const myMessage = {
+					msg: msg,
+					matchN: nmatch
+				};
+				let Id = id
+				fetch("http://localhost:3001/api/matchs/msg/" + Id, {
+					method: 'POST', // or 'PUT'
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify(myMessage),
+				})
+				.then((response) => response.json())
+				.then((data) => {
+					
+					document.getElementById("info").innerText = (data.message);
+					})
+			}
+		}
+
+
+
+		function getPositions(e) {
+			let myId = id
+			let matchNimber = nmatch
+			if (iWon == true) {
+				alert("You win!")
+			}
+			else if (iWon == false) {
+				const reqInfo = {
+					myId: myId,
+				};
+
+				fetch("http://localhost:3001/api/matchs/" + matchNimber + "," + myId)
+					.then((response) => response.json())
+					.then((result) => {
+						console.log(result.lostMatch)
+						console.log("lostmatch")
+
+						if (result.user) {
+							let d = result.user
+							userSawPositions = !userSawPositions
+							if (result.positions != "") {
+								let splittedPositions = result.positions.split('')
+								let otherPlayerMove = splittedPositions[splittedPositions.length - 2]
+								document.querySelectorAll(".gameButton")[otherPlayerMove - 1].innerHTML = '<h3>O</h3>';
+								if (result.lostMatch == true) {
+									document.getElementById("info").innerText = ("you lose!!");
+									return alert("you lose")
+								}
+							}
+
+							if (userSawPositions) {
+								play(e.target.id)
+							}
+						}
+
+
+						else {
+							document.getElementById("info").innerText = (result.message)
+						}
+					})
+				return;
+			}
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		function play(n) {
+			console.log("play attivato")
+			myCell = n - 1
+			//let myId= JSON.parse(localStorage.getItem("tiktaktoe")).userId
+			//let matchNumber = localStorage....
+			let myMoveCell = parseInt(document.querySelectorAll(".gameButton")[myCell].id)
+			if (myMoveCell == "X" || myMoveCell == "O") {
+				return alert("you can't play here")
+			}
+			else
+
+				myMoveCell = "X"
+			let myMove = n
+			let Id = id
+			let matchNimber = nmatch
+			const data = {
+				myMove: myMove,
+				matchN: matchNimber
+			};
+
+			fetch("http://localhost:3001/api/matchs/" + Id, {
+				method: 'POST', // or 'PUT'
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(data),
+			})
+
+				.then((response) => response.json())
+				.then((data) => {
+					console.log(data)
+					document.getElementById("info").innerText = (data.message);
+					console.log(data.message)
+					if (data.message == "your turn is over") {
+						document.querySelectorAll(".gameButton")[myCell].innerHTML = '<h3 class="Xeffects">X</h3>'
+						function cellControl(cell) {
+							console.log("cellControl")
+							return document.querySelectorAll(".gameButton")[cell - 1].textContent == "X"
+						}
+						if ((cellControl(1) && cellControl(2) && cellControl(3)) || (cellControl(4) && cellControl(5) && cellControl(6)) || (cellControl(7) && cellControl(8) && cellControl(9)) || (cellControl(1) && cellControl(4) && cellControl(7)) || (cellControl(2) && cellControl(5) && cellControl(8)) || (cellControl(3) && cellControl(6) && cellControl(9)) || (cellControl(1) && cellControl(5) && cellControl(9)) || (cellControl(7) && cellControl(5) && cellControl(3))) {
+							iWon = true
+							return alert("you win!")
+						}
+					}
+				})
+				.catch((error) => {
+					document.getElementById("info").innerText = (data.message);
+				});
+		}
+
+
+	</script>
